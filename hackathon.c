@@ -47,10 +47,14 @@ void insertHash(int key)
 // Insere a chave dentro da tabela hash
 {
     int index = hashFunction(key);
+
+    #pragma omp critical
+    {
     HashNode *newNode = (HashNode *)malloc(sizeof(HashNode));
     newNode->key = key;
     newNode->next = hashTable[index];
     hashTable[index] = newNode;
+    }
 }
 
 int searchHash(int key)

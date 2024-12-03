@@ -7,6 +7,7 @@
  * Integrantes: Cauan Gabriel de Souza <cauansouza@unesp.br>
  *              Rebeca Ruivo Reis  <rebeca.ruivo@unesp.br>
  *              Gabriel Sanches Pinto  <sanches.pinto@unesp.br>
+ *              Hannah Caroline Cavalcanti Santos Andrade   <hannah.cavalcanti@unesp.br>
  ***********************************************************/
 
 /********************** Libraries **************************/
@@ -24,10 +25,10 @@
 #define EXECUTION_TIMES 1
 #define HASH_TABLE_SIZE 10000 // Tamanho da tabela hash
 
-/******** Solution **********/
+/******** Solução **********/
 int v_output[MAX_N_SIZE];
 
-// Cria a estrutura da taabela hash
+// Cria a estrutura da tabela hash
 typedef struct HashNode
 {
     int key;

@@ -80,16 +80,14 @@ void solution(int **v_input_a, int *v_input_b)
     memset(hashTable, 0, sizeof(hashTable));
 
     // Insere os elementos na tabela hash
-    #pragma omp parallel
+    #pragma omp parallel for collapse(2) schedule(static)
+    for (int i = 0; i < MAX_N_SIZE; i++)
     {
-        #pragma omp for schedule(static)
-        for (int i = 0; i < MAX_N_SIZE; i++)
+        for (int j = 0; j < MAX_N_SIZE; j++)
         {
-            for (int j = 0; j < MAX_N_SIZE; j++)
-            {
-                insertHash(v_input_a[i][j]);
-            }
+            insertHash(v_input_a[i][j]);
         }
+    }
     }
 
     // Testa se existem os valores de B na hash

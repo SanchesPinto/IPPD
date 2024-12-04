@@ -16,6 +16,7 @@
 #include <string.h>
 #include <sys/time.h>
 #include <libgen.h>
+#include <omp.h>
 
 #define INPUT_FILENAME_A "input-A.in"
 #define INPUT_FILENAME_B "input-B.in"
@@ -76,21 +77,26 @@ void solution(int **v_input_a, int *v_input_b)
 {
     // Inicializa o vetor com o valor 0
     memset(hashTable, 0, sizeof(hashTable));
-    
+
     // Insere os elementos na tabela hash
-    for (int i = 0; i < MAX_N_SIZE; i++)
+
+    #pragma omp parallel 
     {
-        for (int j = 0; j < MAX_N_SIZE; j++)
+        #pragma omp for schedule(dynamic, 10)
+        for (int i = 0; i < MAX_N_SIZE; i++)
         {
-            printf("Inserindo %d\n", v_input_a[i][j]);
-            insertHash(v_input_a[i][j]);
+            for (int j = 0; j < MAX_N_SIZE; j++)
+            {
+                printf("Thread numero: %d, Inserindo %d\n", omp_get_num_threads(),v_input_a[i][j]);
+                insertHash(v_input_a[i][j]);
+            }
         }
     }
 
     // Testa se existem os valores de B na hash
     for (int i = 0; i < MAX_N_SIZE; i++)
     {
-        printf("Buscando %d\n", v_input_b[i]);
+        printf("Thread numero: %d, Buscando %d\n", omp_get_num_threads(), v_input_b[i]);
         v_output[i] = searchHash(v_input_b[i]) ? 1 : 0;
     }
 }

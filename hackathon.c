@@ -17,12 +17,13 @@
 #include <string.h>
 #include <sys/time.h>
 #include <libgen.h>
+#include <omp.h>
 
 #define INPUT_FILENAME_A "input-A.in"
 #define INPUT_FILENAME_B "input-B.in"
 #define OUTPUT_FILENAME "output.out"
 #define MAX_N_SIZE 2000
-#define EXECUTION_TIMES 1
+#define EXECUTION_TIMES 5
 #define HASH_TABLE_SIZE 10000 // Tamanho da tabela hash
 
 /******** Solução **********/
@@ -48,19 +49,36 @@ void insertHash(int key)
 {
     int index = hashFunction(key);
 
-    #pragma omp critical
-    {
+    
     HashNode *newNode = (HashNode *)malloc(sizeof(HashNode));
     newNode->key = key;
     newNode->next = hashTable[index];
     hashTable[index] = newNode;
-    }
+    
 }
 
-int searchHash(int key)
+int searchHash(int key, int numThreads, int threadId)
 // Busca a chave dentro da tabela hash
 {
     int index = hashFunction(key);
+ /*
+    int chunkSize = MAX_N_SIZE / numThreads;
+    int start = threadId * chunkSize;
+    int end = (threadId == numThreads - 1) ? MAX_N_SIZE : start + chunkSize;
+ 
+    for (int i = start; i < end; i++)
+    {
+        for (HashNode *current = hashTable[i]; current != NULL; current = current->next)
+        {
+        if (current->key == key)
+        {
+            return 1;
+        }
+        }
+    }
+*/
+
+/*
     HashNode *current = hashTable[index];
     while (current != NULL)
     {
@@ -70,6 +88,7 @@ int searchHash(int key)
         }
         current = current->next;
     }
+*/
     return 0;
 }
 
@@ -80,7 +99,7 @@ void solution(int **v_input_a, int *v_input_b)
     memset(hashTable, 0, sizeof(hashTable));
 
     // Insere os elementos na tabela hash
-    #pragma omp parallel for collapse(2) schedule(static)
+    //#pragma omp parallel for schedule(static)
     for (int i = 0; i < MAX_N_SIZE; i++)
     {
         for (int j = 0; j < MAX_N_SIZE; j++)
@@ -88,13 +107,20 @@ void solution(int **v_input_a, int *v_input_b)
             insertHash(v_input_a[i][j]);
         }
     }
-    }
+    
 
     // Testa se existem os valores de B na hash
-    #pragma omp parallel for
-    for (int i = 0; i < MAX_N_SIZE; i++)
+    #pragma omp parallel
     {
-        v_output[i] = searchHash(v_input_b[i]) ? 1 : 0;
+        int numThreads = 0;
+        numThreads = omp_get_num_threads();
+        int threadId = omp_get_thread_num();
+
+        #pragma omp for 
+        for (int i = 0; i < MAX_N_SIZE; i++)
+        {
+            v_output[i] = searchHash(v_input_b[i], numThreads, threadId) ? 1 : 0;
+        }
     }
 }
 

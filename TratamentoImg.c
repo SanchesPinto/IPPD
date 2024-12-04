@@ -29,7 +29,7 @@ void applyBlur(unsigned char input[HEIGHT][WIDTH], unsigned char output[HEIGHT][
     int kernelSum = 9;
     int expensiveIterations = 10000; // Aumente conforme necessário para maior carga
 
-    #pragma omp parallel for collapse(2) schedule(static)
+    //#pragma omp parallel for collapse(2) schedule(static)
     for (int y = 1; y < HEIGHT - 1; y++) {
         for (int x = 1; x < WIDTH - 1; x++) {
             int sum = 0;
@@ -44,8 +44,10 @@ void applyBlur(unsigned char input[HEIGHT][WIDTH], unsigned char output[HEIGHT][
             // Aplica a função custosa no pixel
             //double expensiveResult = computeExpensiveOperation(x, y, expensiveIterations);
             //sum += (int)expensiveResult; // Adiciona o resultado ao somatório
-
-            output[y][x] = (sum / kernelSum) % 256; // Normaliza e mantém no intervalo [0, 255]
+            //#pragma omp critical
+            {
+                output[y][x] = (sum / kernelSum) % 256; // Normaliza e mantém no intervalo [0, 255]
+            }
         }
     }
 }

@@ -11,7 +11,7 @@
 // Função para aplicar a transformação logarítmica
 void apply_log_transform(unsigned char (*input)[HEIGHT][WIDTH], unsigned char (*output)[HEIGHT][WIDTH], float c)
 {
-//#pragma omp parallel for collapse(2)
+    #pragma omp parallel for collapse(2)
     for (int y = 0; y < HEIGHT; y++)
     {
         for (int x = 0; x < WIDTH; x++)
@@ -31,7 +31,7 @@ void apply_median_filter(unsigned char (*input)[HEIGHT][WIDTH], unsigned char (*
 {
     int window[25];
 
-//#pragma omp parallel for private(window) collapse(2)
+    #pragma omp parallel for private(window) collapse(2)
     for (int y = 2; y < HEIGHT - 2; y++)  // Ajuste os limites para a nova janela
     {
         for (int x = 2; x < WIDTH - 2; x++) // Ajuste os limites para a nova janela

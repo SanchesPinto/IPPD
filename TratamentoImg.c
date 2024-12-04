@@ -4,43 +4,52 @@
 #include <sys/time.h>
 #include <omp.h>
 
-#define WIDTH 200  // Largura da imagem
-#define HEIGHT 100 // Altura da imagem
+#define WIDTH 3840 // Largura da imagem
+#define HEIGHT 2160 // Altura da imagem
+
+double computeExpensiveOperation(int x, int y, int iterations) {
+    double sum = 0.0;
+    int sign = 1;
+
+    for (int i = 0; i < iterations; i++) {
+        sum += sign * 1.0 / (2 * i + 1); // Termo da série de Leibniz
+        sign = -sign;                   // Alterna o sinal
+    }
+
+    return sum * 4.0; // Multiplica por 4 para aproximar pi
+}
 
 // Função para aplicar o filtro de blur em uma imagem em tons de cinza
-void applyBlur(unsigned char input[HEIGHT][WIDTH], unsigned char output[HEIGHT][WIDTH])
-{
-    // Kernel de blur 3x3
+void applyBlur(unsigned char input[HEIGHT][WIDTH], unsigned char output[HEIGHT][WIDTH]) {
     int kernel[3][3] = {
         {1, 1, 1},
         {1, 1, 1},
-        {1, 1, 1}};
-    int kernelSum = 9; // Soma dos elementos do kernel
+        {1, 1, 1}
+    };
+    int kernelSum = 9;
+    int expensiveIterations = 10000; // Aumente conforme necessário para maior carga
 
-    // Aplicar o kernel na imagem
+    #pragma omp parallel for collapse(2) schedule(static)
+    for (int y = 1; y < HEIGHT - 1; y++) {
+        for (int x = 1; x < WIDTH - 1; x++) {
+            int sum = 0;
 
-    #pragma omp parallel for schedule(dynamic) collapse(2)
-    {
-    
-        for (int y = 1; y < HEIGHT - 1; y++)
-        {
-            for (int x = 1; x < WIDTH - 1; x++)
-            {
-                int sum = 0;
-                for (int ky = -1; ky <= 1; ky++)
-                {
-                    for (int kx = -1; kx <= 1; kx++)
-                    {
-                        printf("Thread numero: %d, Aplicando kernel na posicao %d %d\n", omp_get_thread_num(), y, x);
-                        sum += input[y + ky][x + kx] * kernel[ky + 1][kx + 1];
-                    }
+            // Percorrer o kernel
+            for (int ky = -1; ky <= 1; ky++) {
+                for (int kx = -1; kx <= 1; kx++) {
+                    sum += input[y + ky][x + kx] * kernel[ky + 1][kx + 1];
                 }
-                output[y][x] = sum / kernelSum;
             }
+
+            // Aplica a função custosa no pixel
+            //double expensiveResult = computeExpensiveOperation(x, y, expensiveIterations);
+            //sum += (int)expensiveResult; // Adiciona o resultado ao somatório
+
+            output[y][x] = (sum / kernelSum) % 256; // Normaliza e mantém no intervalo [0, 255]
         }
-        printf("Numero de threads: %d\n", omp_get_num_threads());
     }
 }
+
 
 // Função para gerar uma imagem de exemplo (gradiente horizontal)
 void generateExampleImage(unsigned char image[HEIGHT][WIDTH])
@@ -77,20 +86,23 @@ int main()
     // Gerar uma imagem de exemplo
     generateExampleImage(input);
     savePGM("original.pgm", input);
-    struct timeval start, end;
+    struct timeval start, stop;
 
     gettimeofday(&start, NULL);
     // Aplicar o filtro de blur
     applyBlur(input, output);
-    gettimeofday(&end, NULL);
+    gettimeofday(&stop, NULL);
 
-    float time_spent = (((end.tv_sec * 1000000 + end.tv_usec) - (start.tv_sec * 1000000 + start.tv_usec))) / 1000.0f;
-    printf("[INFO] Tempo total de %f mili-seconds \n", time_spent);
+    double tempo =
+        (((double)(stop.tv_sec) * 1000.0 + (double)(stop.tv_usec / 1000.0)) -
+         ((double)(start.tv_sec) * 1000.0 + (double)(start.tv_usec / 1000.0)));
+
+    printf("Tempo: %f ms \n", tempo);
 
     // Salvar a imagem original e a imagem com blur
     savePGM("blurred.pgm", output);
 
     printf("Filtro de blur aplicado. Imagens salvas como 'original.pgm' e 'blurred.pgm'.\n");
-    
+
     return 0;
 }

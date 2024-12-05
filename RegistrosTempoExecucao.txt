@@ -1,0 +1,42 @@
+
+====================================
+Utilizando 1 threads
+[LOG] Tempo sequencial (log transform): 38.928955 ms
+[LOG] Tempo paralelo (log transform): 43.594971 ms
+[MEDIAN] Tempo sequencial (median filter): 1385.477051 ms
+[MEDIAN] Tempo paralelo (median filter): 1479.303223 ms
+
+====================================
+Utilizando 2 threads
+[LOG] Tempo sequencial (log transform): 38.317871 ms
+[LOG] Tempo paralelo (log transform): 21.826172 ms
+[MEDIAN] Tempo sequencial (median filter): 1367.830078 ms
+[MEDIAN] Tempo paralelo (median filter): 705.625977 ms
+
+====================================
+Utilizando 3 threads
+[LOG] Tempo sequencial (log transform): 38.090820 ms
+[LOG] Tempo paralelo (log transform): 14.795898 ms
+[MEDIAN] Tempo sequencial (median filter): 1377.114014 ms
+[MEDIAN] Tempo paralelo (median filter): 569.734863 ms
+
+====================================
+Utilizando 4 threads
+[LOG] Tempo sequencial (log transform): 38.413086 ms
+[LOG] Tempo paralelo (log transform): 13.716797 ms
+[MEDIAN] Tempo sequencial (median filter): 1447.312988 ms
+[MEDIAN] Tempo paralelo (median filter): 359.823975 ms
+
+====================================
+Utilizando 5 threads
+[LOG] Tempo sequencial (log transform): 38.506836 ms
+[LOG] Tempo paralelo (log transform): 9.214844 ms
+[MEDIAN] Tempo sequencial (median filter): 1399.380127 ms
+[MEDIAN] Tempo paralelo (median filter): 338.871094 ms
+
+====================================
+Utilizando 6 threads
+[LOG] Tempo sequencial (log transform): 38.506836 ms
+[LOG] Tempo paralelo (log transform): 7.514160 ms
+[MEDIAN] Tempo sequencial (median filter): 1383.339111 ms
+[MEDIAN] Tempo paralelo (median filter): 290.034912 ms

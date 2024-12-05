@@ -7,12 +7,13 @@
 
 #define WIDTH 1000  // Largura da imagem
 #define HEIGHT 5000 // Altura da imagem
+#define OMP_NUM_THREADS 6
 
 // Função para aplicar a transformação logarítmica
-void apply_log_transform(unsigned char (*input)[HEIGHT][WIDTH], unsigned char (*output)[HEIGHT][WIDTH], float c, int n)
+void apply_log_transform(unsigned char (*input)[HEIGHT][WIDTH], unsigned char (*output)[HEIGHT][WIDTH], float c)
 {
-#pragma omp parallel num_threads(n)
-#pragma omp for collapse(2)
+    #pragma omp parallel num_threads(OMP_NUM_THREADS)
+    #pragma omp for collapse(2)
     for (int y = 0; y < HEIGHT; y++)
     {
         for (int x = 0; x < WIDTH; x++)
@@ -44,13 +45,12 @@ void apply_log_transform_sequential(unsigned char (*input)[HEIGHT][WIDTH], unsig
 }
 
 // Função para aplicar o filtro de mediana 3x3
-void apply_median_filter(unsigned char (*input)[HEIGHT][WIDTH], unsigned char (*output)[HEIGHT][WIDTH], int n)
+void apply_median_filter(unsigned char (*input)[HEIGHT][WIDTH], unsigned char (*output)[HEIGHT][WIDTH])
 {
     int window[25];
 
-#pragma omp parallel num_threads(n)
-#pragma omp for private(window) collapse(2)
-
+    #pragma omp parallel num_threads(OMP_NUM_THREADS)
+    #pragma omp for private(window) collapse(2)
     for (int y = 2; y < HEIGHT - 2; y++) // Ajuste os limites para a nova janela
     {
         for (int x = 2; x < WIDTH - 2; x++) // Ajuste os limites para a nova janela
@@ -169,6 +169,9 @@ void savePGM(const char *filename, unsigned char (*image)[HEIGHT][WIDTH])
 
 int main()
 {
+    printf("\n====================================\n");
+    printf("Utilizando %d threads\n", OMP_NUM_THREADS);
+
     unsigned char input[HEIGHT][WIDTH];
     unsigned char output[HEIGHT][WIDTH];
 
@@ -180,49 +183,40 @@ int main()
     generateExampleImage(&input);
     savePGM("original.pgm", &input);
 
-    int TotalDeThreads = omp_get_max_threads();
+    // Comparar tempos da transformação logarítmica
+    gettimeofday(&start, NULL);
+    apply_log_transform_sequential(&input, &output, c);
+    gettimeofday(&end, NULL);
+    tempoSeq = (((double)(end.tv_sec) * 1000.0 + (double)(end.tv_usec / 1000.0)) -
+                ((double)(start.tv_sec) * 1000.0 + (double)(start.tv_usec / 1000.0)));
+    savePGM("log_transform_sequential.pgm", &output);
+    printf("[LOG] Tempo sequencial (log transform): %f ms\n", tempoSeq);
 
-    for (int i = 1; i <= TotalDeThreads; i++)
-    {
-        
-        printf("\n====================\nUtilizando %d thread(s)\n", i);
+    gettimeofday(&start, NULL);
+    apply_log_transform(&input, &output, c);
+    gettimeofday(&end, NULL);
+    tempoPar = (((double)(end.tv_sec) * 1000.0 + (double)(end.tv_usec / 1000.0)) -
+                ((double)(start.tv_sec) * 1000.0 + (double)(start.tv_usec / 1000.0)));
+    savePGM("log_transform_parallel.pgm", &output);
+    printf("[LOG] Tempo paralelo (log transform): %f ms\n", tempoPar);
 
-        // Comparar tempos da transformação logarítmica
-        gettimeofday(&start, NULL);
-        apply_log_transform_sequential(&input, &output, c);
-        gettimeofday(&end, NULL);
-        tempoSeq = (((double)(end.tv_sec) * 1000.0 + (double)(end.tv_usec / 1000.0)) -
-                    ((double)(start.tv_sec) * 1000.0 + (double)(start.tv_usec / 1000.0)));
-        savePGM("log_transform_sequential.pgm", &output);
-        printf("[LOG] Tempo sequencial (log transform): %f ms\n", tempoSeq);
+    // Comparar tempos do filtro de mediana
+    gettimeofday(&start, NULL);
+    apply_median_filter_sequential(&input, &output);
+    gettimeofday(&end, NULL);
+    tempoSeq = (((double)(end.tv_sec) * 1000.0 + (double)(end.tv_usec / 1000.0)) -
+                ((double)(start.tv_sec) * 1000.0 + (double)(start.tv_usec / 1000.0)));
+    savePGM("median_filter_sequential.pgm", &output);
+    printf("[MEDIAN] Tempo sequencial (median filter): %f ms\n", tempoSeq);
 
-        omp_set_num_threads(i);
-        apply_log_transform(&input, &output, c, i);
-        apply_log_transform(&input, &output, c, i);
-        gettimeofday(&end, NULL);
-        tempoPar = (((double)(end.tv_sec) * 1000.0 + (double)(end.tv_usec / 1000.0)) -
-                    ((double)(start.tv_sec) * 1000.0 + (double)(start.tv_usec / 1000.0)));
-        savePGM("log_transform_parallel.pgm", &output);
-        printf("[LOG] Tempo paralelo (log transform): %f ms\n", tempoPar);
-
-        // Comparar tempos do filtro de mediana
-        gettimeofday(&start, NULL);
-        apply_median_filter_sequential(&input, &output);
-        gettimeofday(&end, NULL);
-        tempoSeq = (((double)(end.tv_sec) * 1000.0 + (double)(end.tv_usec / 1000.0)) -
-                    ((double)(start.tv_sec) * 1000.0 + (double)(start.tv_usec / 1000.0)));
-        savePGM("median_filter_sequential.pgm", &output);
-        printf("[MEDIAN] Tempo sequencial (median filter): %f ms\n", tempoSeq);
-
-        omp_set_num_threads(i);
-        apply_median_filter(&input, &output, i);
-        apply_median_filter(&input, &output, i);
-        gettimeofday(&end, NULL);
-        tempoPar = (((double)(end.tv_sec) * 1000.0 + (double)(end.tv_usec / 1000.0)) -
-                    ((double)(start.tv_sec) * 1000.0 + (double)(start.tv_usec / 1000.0)));
-        savePGM("median_filter_parallel.pgm", &output);
-        printf("[MEDIAN] Tempo paralelo (median filter): %f ms\n", tempoPar);
-    }
+    gettimeofday(&start, NULL);
+    apply_median_filter(&input, &output);
+    gettimeofday(&end, NULL);
+    tempoPar = (((double)(end.tv_sec) * 1000.0 + (double)(end.tv_usec / 1000.0)) -
+                ((double)(start.tv_sec) * 1000.0 + (double)(start.tv_usec / 1000.0)));
+    savePGM("median_filter_parallel.pgm", &output);
+    printf("[MEDIAN] Tempo paralelo (median filter): %f ms\n", tempoPar);
 
     return 0;
 }
+

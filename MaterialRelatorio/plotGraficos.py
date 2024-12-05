@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 
-# Dados fictícios para demonstração
+# Dados coletados usando o programa relatorio.c (esses dados tambem estao no arquivo relatorio.txt)
 threads = [1, 2, 3, 4, 5, 6]
 log_seq = [38.928955, 38.317871, 38.090820, 38.413086, 38.506836, 38.506836]  # Tempo sequencial (log transform)
 log_par = [43.594971, 21.826172, 14.795898, 13.716797, 9.214844, 7.514160]   # Tempo paralelo (log transform)
